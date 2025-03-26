@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generatore Codice a Barre EAN-128 e Programmazione UCI Lissone</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            height: 100vh;
+            margin: 0;
+            background-color: blue;
+            color: white;
+        }
+
+        #header {
+            background-color: yellow;
+            color: blue;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        #input-container {
+            margin-bottom: 20px;
+        }
+
+        #barcode-container {
+            margin-top: 20px;
+        }
+
+        #barcode {
+            /* Lo stile del codice a barre sarà gestito dalla libreria */
+        }
+
+        #programmazione-container {
+            margin-top: 20px;
+            border: 1px solid white;
+            padding: 10px;
+            width: 80%;
+        }
+
+        #programmazione-container h2 {
+            text-align: center;
+        }
+
+        .programmazione-film {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="header">
+        UCI
+    </div>
+
+    <div id="input-container">
+        <label for="data-input">Inserisci i dati EAN-128:</label><br>
+        <input type="text" id="data-input" placeholder="Es. (01)95012345678908(17)241231">
+        <button onclick="generateBarcode()">Genera Codice a Barre</button>
+        <button onclick="resetBarcode()">Reset</button>
+    </div>
+
+    <div id="barcode-container">
+        <svg id="barcode"></svg>
+    </div>
+
+    <div id="programmazione-container">
+        <h2>Film in Programmazione (TMDB)</h2>
+        <div id="film-container">
+        </div>
+    </div>
+
+   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+   <script>
+        const TMDB_API_KEY = "YOUR_TMDB_API_KEY"; // Inserisci qui la tua chiave API TMDB
+
+        function generateBarcode() {
+            const dataInput = document.getElementById("data-input").value;
+            const barcodeElement = document.getElementById("barcode");
+
+            JsBarcode(barcodeElement, dataInput, {
+                format: "CODE128",
+                displayValue: true,
+                width: 2,
+                height: 100,
+                textAlign: "center"
+            });
+        }
+
+        function resetBarcode() {
+            document.getElementById("data-input").value = "";
+            document.getElementById("barcode-container").innerHTML = "";
+        }
+
+        function getFilmInProgrammazione() {
+            fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${TMDB_API_KEY}&language=it-IT`)
+                .then(response => response.json())
+                .then(data => {
+                    const filmContainer = document.getElementById("film-container");
+                    filmContainer.innerHTML = "";
+
+                    data.results.forEach(film => {
+                        const filmDiv = document.createElement("div");
+                        filmDiv.classList.add("programmazione-film");
+                        filmDiv.innerHTML = `
+                            <span>${film.title}</span>
+                            <span>Uscita: ${film.release_date}</span>
+                        `;
+                        filmContainer.appendChild(filmDiv);
+                    });
+                })
+                .catch(error => console.error("Errore nel recupero dei film:", error));
+        }
+
+        window.onload = getFilmInProgrammazione;
+    </script>
+</body>
+
+</html>
