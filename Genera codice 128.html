@@ -14,15 +14,11 @@
             justify-content: flex-start;
             height: 100vh;
             margin: 0;
-            background-color: blue;
+            background-color: rgb(0, 0, 128);
             color: white;
         }
 
         #header {
-            background-color: yellow;
-            color: blue;
-            padding: 10px 20px;
-            border-radius: 30px;
             font-size: 2em;
             font-weight: bold;
             margin-bottom: 20px;
@@ -34,10 +30,13 @@
 
         #barcode-container {
             margin-top: 20px;
+            cursor: pointer;
         }
 
         #barcode {
             /* Lo stile del codice a barre sarà gestito dalla libreria */
+            width: 100%;
+            height: auto;
         }
 
         #programmazione-container {
@@ -56,17 +55,100 @@
             justify-content: space-between;
             margin-bottom: 10px;
         }
+
+        /* Stili per la lista dei film */
+        .movie-list-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .movie-card {
+            width: 200px;
+            margin: 10px;
+            border: 1px solid #ccc;
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+            text-align: center;
+            border-radius: 5px;
+            overflow: hidden; /* Nasconde l'overflow del contenuto */
+        }
+
+        .movie-card img {
+            width: 100%;
+            height: auto;
+        }
+
+        .movie-card h3 {
+            font-size: 1em;
+            padding: 10px;
+            margin: 0;
+        }
+
+        .movie-card p {
+            font-size: 0.8em;
+            padding: 10px;
+            margin: 0;
+        }
+
+        .movie-card .btn {
+            display: block;
+            margin: 10px;
+            padding: 5px 10px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            text-align: center;
+            border-radius: 5px;
+        }
+
+        /* Modale */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.9);
+        }
+
+        .modal-content {
+            margin: auto;
+            display: block;
+            max-width: 80%;
+            max-height: 80%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .close {
+            color: #fff;
+            position: absolute;
+            top: 10px;
+            right: 25px;
+            font-size: 35px;
+            font-weight: bold;
+            cursor: pointer;
+        }
     </style>
+
 </head>
 
 <body>
     <div id="header">
-        UCI
+        <a class="uci-logo" href="https://www.ucicinemas.it/">
+            <img src="https://www.ucicinemas.it/static/website/images/logo-2020.png" alt="UCI CINEMAS"
+                title="UCI CINEMAS" />
+        </a>
     </div>
 
     <div id="input-container">
-        <label for="data-input">Inserisci i dati EAN-128:</label><br>
-        <input type="text" id="data-input" placeholder="Es. (01)95012345678908(17)241231">
+        <label for="data-input">Inserisci Codice promozionale:</label><br>
+        <input type="text" id="data-input" placeholder="Es. 70E4580H25600481UCI">
         <button onclick="generateBarcode()">Genera Codice a Barre</button>
         <button onclick="resetBarcode()">Reset</button>
     </div>
@@ -76,18 +158,30 @@
     </div>
 
     <div id="programmazione-container">
-        <h2>Film in Programmazione (TMDB)</h2>
-        <div id="film-container">
+        <h2>Film in Programmazione</h2>
+        <div class="movie-list-container">
+            </div>
+    </div>
+
+    <div id="barcode-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <img id="barcode-modal-image" src="" alt="Codice a Barre" style="width: 100%; height: auto;">
         </div>
     </div>
 
-   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
-   <script>
-        const TMDB_API_KEY = "YOUR_TMDB_API_KEY"; // Inserisci qui la tua chiave API TMDB
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <script>
+        const TMDB_API_KEY = "8d598d7a5b6cc81fef53d86b5e2cc247"; // Inserisci qui la tua chiave API TMDB
 
         function generateBarcode() {
             const dataInput = document.getElementById("data-input").value;
             const barcodeElement = document.getElementById("barcode");
+            const barcodeContainer = document.getElementById("barcode-container");
+            const barcodeModal = document.getElementById("barcode-modal");
+            const barcodeModalImage = document.getElementById("barcode-modal-image");
+
+        
 
             JsBarcode(barcodeElement, dataInput, {
                 format: "CODE128",
@@ -96,6 +190,32 @@
                 height: 100,
                 textAlign: "center"
             });
+
+            // Imposta il cursore per indicare che è cliccabile
+            barcodeElement.style.cursor = "pointer";
+
+            // Aggiungi un listener per aprire la modale al clic
+            barcodeElement.onclick = function() {
+                barcodeModal.style.display = "block";
+                // Ottieni l'URL dell'immagine SVG
+                const svgURL = new XMLSerializer().serializeToString(barcodeElement);
+                barcodeModalImage.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgURL)));
+            };
+
+            // Get the element that closes the modal
+            const closeBtn = document.getElementsByClassName("close")[0];
+
+            // When the user clicks on (x), close the modal
+            closeBtn.onclick = function() {
+                barcodeModal.style.display = "none";
+            };
+
+            // When the user clicks anywhere outside of the modal, close it
+            window.onclick = function(event) {
+                if (event.target == barcodeModal) {
+                    barcodeModal.style.display = "none";
+                }
+            };
         }
 
         function resetBarcode() {
@@ -103,27 +223,68 @@
             document.getElementById("barcode-container").innerHTML = "";
         }
 
-        function getFilmInProgrammazione() {
-            fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${TMDB_API_KEY}&language=it-IT`)
-                .then(response => response.json())
-                .then(data => {
-                    const filmContainer = document.getElementById("film-container");
-                    filmContainer.innerHTML = "";
+        const movieListContainer = document.querySelector(".movie-list-container");
 
-                    data.results.forEach(film => {
-                        const filmDiv = document.createElement("div");
-                        filmDiv.classList.add("programmazione-film");
-                        filmDiv.innerHTML = `
-                            <span>${film.title}</span>
-                            <span>Uscita: ${film.release_date}</span>
-                        `;
-                        filmContainer.appendChild(filmDiv);
-                    });
-                })
-                .catch(error => console.error("Errore nel recupero dei film:", error));
+        // Funzione per creare una card del film
+        function createMovieCard(movie) {
+            const card = document.createElement("div");
+            card.classList.add("movie-card");
+
+            const image = document.createElement("img");
+            image.src = "https://image.tmdb.org/t/p/w200" + movie.poster_path; // Costruisci l'URL dell'immagine
+            image.alt = movie.title;
+
+            const title = document.createElement("h3");
+            title.textContent = movie.title;
+
+            const description = document.createElement("p");
+            description.textContent = movie.overview;
+
+            const button = document.createElement("a");
+            button.href = "https://www.themoviedb.org/movie/" + movie.id; // Link alla pagina TMDB del film
+            button.classList.add("btn");
+            button.textContent = "Dettagli";
+
+            card.appendChild(image);
+            card.appendChild(title);
+            card.appendChild(description);
+            card.appendChild(button);
+
+            return card;
         }
 
-        window.onload = getFilmInProgrammazione;
+        // Funzione per recuperare i film usciti nelle ultime due settimane da TMDB
+        function getRecentMovies() {
+    const today = new Date();
+    const twoWeeksAgo = new Date(today);
+    twoWeeksAgo.setDate(today.getDate() - 30);
+
+    const todayFormatted = today.toISOString().split('T')[0];
+    const twoWeeksAgoFormatted = twoWeeksAgo.toISOString().split('T')[0];
+
+    // Modifica qui: Aggiungi &region=IT all'URL
+    const url = `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&language=it-IT&sort_by=popularity.desc&include_adult=false&include_video=false&page=1&release_date.gte=${twoWeeksAgoFormatted}&release_date.lte=${todayFormatted}&region=IT`;
+
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            movieListContainer.innerHTML = ""; // Pulisci il contenitore
+
+            data.results.forEach(movie => {
+                // Verifica se il film ha una data di rilascio
+                if (movie.release_date) {
+                    const movieCard = createMovieCard(movie);
+                    movieListContainer.appendChild(movieCard);
+                }
+            });
+        })
+        .catch(error => console.error("Errore nel recupero dei film:", error));
+}
+
+        // Chiama la funzione per ottenere i film quando la pagina si carica
+        window.onload = function() {
+            getRecentMovies();
+        };
     </script>
 </body>
 
